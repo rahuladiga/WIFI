@@ -15,6 +15,8 @@ width = screen.get_width()
 height = screen.get_height()
 room_list = []
 all_room_dict = {}
+router_point=[0,0]
+main_wifi_room=0
 class InputBox:
 
     def __init__(self, x, y, w, h, text=''):
@@ -53,6 +55,12 @@ class InputBox:
         screen.blit(self.txt_surface, (self.rect.x+5, self.rect.y+5))
         # Blit the rect.
         pygame.draw.rect(screen, self.color, self.rect, 2)
+
+def is_inside(x,y,w,h,p) :
+   if (p[0] > x and p[0] < w+x and p[1] > y and p[1] < h+y) :
+      return True
+   else :
+      return False
 def get_room(numb):
     elem=all_room_dict[numb]
     return elem[0],elem[1],elem[2],elem[3]
@@ -161,12 +169,15 @@ def predict_signal():
         out=con(int(ele[0]),int(ele[1]),ele[2], ele[3],router_point,room_pass_mat)
         output=output+out
     output=np.array(output)
+    print(output)
     np.savetxt("./data/data.csv", output, delimiter = ",")
     #map_heat()
 
 def display_rooms():
     clock = pygame.time.Clock()
+    chk=False
     while True:
+        room_list = list(all_room_dict.values())
         for event in pygame.event.get():
                     if event.type == pygame.QUIT:
                         pygame.quit()
@@ -179,6 +190,28 @@ def display_rooms():
                         if width-145 <= mouse[0] <= width-5 and height-45 <= mouse[1] <= height:
                             pygame.image.save(screen, "./data/floor_plan.png")
                             predict_signal()
+                        if width-540 <= mouse[0] <= width-380 and 0 <= mouse[1] <= 40:
+                            chk=False
+                            while True:
+                                mouse = pygame.mouse.get_pos()
+                                for event in pygame.event.get():
+                                    if event.type == pygame.MOUSEBUTTONDOWN:
+                                        router_point=[mouse[0],mouse[1]]
+                                        for ele in all_room_dict:
+                                            if(is_inside(all_room_dict[ele][0],all_room_dict[ele][1],all_room_dict[ele][2], all_room_dict[ele][3],router_point)==True):
+                                                main_wifi_room=ele
+                                                print(main_wifi_room)
+                                                chk=True
+                                                break
+                                        if(chk==False):
+                                            print("Router Point Not Inside Room")
+                                            continue
+                                        else:
+                                            break
+                                if(chk==True):
+                                    break
+                                            
+
         screen.fill((0, 0, 0))
         mouse = pygame.mouse.get_pos()
         if width-140 <= mouse[0] <= width and 0 <= mouse[1] <= 40:
@@ -195,13 +228,20 @@ def display_rooms():
             pygame.draw.rect(screen,color_light,[width-145,height-45,140,40])
         else:
             pygame.draw.rect(screen,color_dark,[width-145,height-45,140,40])
-            
+
+        if width-540 <= mouse[0] <= width-380 and 0 <= mouse[1] <= 40:
+            pygame.draw.rect(screen,color_light,[width-540,0,160,40])
+        else:
+            pygame.draw.rect(screen,color_dark,[width-540,0,160,40])
+        
         screen.blit(FONT.render('ADD' , True , color) , (width-140+45,10))
         screen.blit(FONT.render('EDIT' , True , color) , (width-340+45,10))
+        screen.blit(FONT.render('ADD ROUTER' , True , color) , (width-540+5,10))
         screen.blit(FONT.render('PREDICT' , True , color) , (width-155+35,height-35))
-        room_list = list(all_room_dict.values())
         for ele in room_list:
             pygame.draw.rect(screen, ele[5], pygame.Rect(ele[0],ele[1],ele[2], ele[3]),  2)
+        if(chk==True):
+            pygame.draw.circle(screen,(255,0,0),router_point,5,width=0)
         pygame.display.update()
         pygame.display.flip()
         clock.tick(30)
