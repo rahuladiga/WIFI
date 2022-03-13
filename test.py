@@ -162,7 +162,6 @@ def predict_signal():
     room_list = list(all_room_dict.values())
     output=[]
     main_wifi_room=0
-    router_point=[0,0]
     for ele in room_list:
         print(ele)
         room_pass_mat=room_pass_material(ele[4],main_wifi_room)
@@ -171,7 +170,7 @@ def predict_signal():
     output=np.array(output)
     print(output)
     np.savetxt("./data/data.csv", output, delimiter = ",")
-    #map_heat()
+    map_heat()
 
 def display_rooms():
     clock = pygame.time.Clock()
@@ -196,7 +195,9 @@ def display_rooms():
                                 mouse = pygame.mouse.get_pos()
                                 for event in pygame.event.get():
                                     if event.type == pygame.MOUSEBUTTONDOWN:
+                                        global router_point
                                         router_point=[mouse[0],mouse[1]]
+                                        print(router_point)
                                         for ele in all_room_dict:
                                             if(is_inside(all_room_dict[ele][0],all_room_dict[ele][1],all_room_dict[ele][2], all_room_dict[ele][3],router_point)==True):
                                                 main_wifi_room=ele
