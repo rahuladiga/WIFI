@@ -9,7 +9,7 @@ def con(ret_x,ret_y,ret_w,ret_h,router_point,room_pass_mat):
     output=[]
     for ele in lst:
         ele = ele + (round(math.sqrt(((ele[0]-router_point[0])**2)+((ele[1]-router_point[1])**2))),
-        room_pass_mat[0],room_pass_mat[1],room_pass_mat[2],room_pass_mat[3],room_pass_mat[4],room_pass_mat[5],) ##[480,300500,0,0,0,0,0,0]
+        room_pass_mat[0],room_pass_mat[1],room_pass_mat[2],room_pass_mat[3],room_pass_mat[4],room_pass_mat[5],((round(math.sqrt(((ele[0]-router_point[0])**2)+((ele[1]-router_point[1])**2)))*0.42/12)+room_pass_mat[0])) ##[480,300500,0,0,0,0,0,0]
         output.append(ele)
     print(output)
     return(output)
