@@ -3,6 +3,7 @@ from pygame.locals import *
 from heat import map_heat
 import numpy as np
 from convert_csv import con
+from collections import defaultdict
 pygame.init()
 screen = pygame.display.set_mode((1080, 720))
 COLOR_INACTIVE = pygame.Color('lightskyblue3')
@@ -15,6 +16,8 @@ width = screen.get_width()
 height = screen.get_height()
 room_list = []
 all_room_dict = {}
+all_room_attach_det = {}
+edges=[]
 router_point=[0,0]
 main_wifi_room=0
 class InputBox:
@@ -137,11 +140,30 @@ def move_room():
         pygame.display.flip()
         screen.fill((0, 0, 0))
         clock.tick(30)
-def room_pass_material(room_attach,main_wifi_room):
+# def room_pass_material(room_attach,main_wifi_room):
+#     room_pass_mat=[0,0,0,0,0,0]
+#     while(room_attach!=main_wifi_room):
+#         room_mat=all_room_dict[room_attach][5]
+#         prev_room=all_room_dict[room_attach][4]
+#         if room_mat==(220,220,220):
+#             room_pass_mat[0]+=1
+#         elif room_mat==(0,0,255):
+#             room_pass_mat[1]+=1
+#         elif room_mat==(255,0,0):
+#             room_pass_mat[2]+=1
+#         elif room_mat==(165,42,42):
+#             room_pass_mat[3]+=1
+#         elif room_mat==(255,255,255):
+#             room_pass_mat[4]+=1
+#         elif room_mat==(255,20,147):
+#             room_pass_mat[5]+=1
+#         room_attach=prev_room
+#     return room_pass_mat
+
+def room_pass_material(room_attach):
     room_pass_mat=[0,0,0,0,0,0]
-    while(room_attach!=main_wifi_room):
-        room_mat=all_room_dict[room_attach][5]
-        prev_room=all_room_dict[room_attach][4]
+    for each_room_attach in room_attach:
+        room_mat=all_room_dict[each_room_attach][5]
         if room_mat==(220,220,220):
             room_pass_mat[0]+=1
         elif room_mat==(0,0,255):
@@ -154,21 +176,54 @@ def room_pass_material(room_attach,main_wifi_room):
             room_pass_mat[4]+=1
         elif room_mat==(255,20,147):
             room_pass_mat[5]+=1
-        room_attach=prev_room
     return room_pass_mat
 
+def BFS_SP(graph, start, goal):
+	explored = []
+	queue = [[start]]
+	if start == goal:
+		print("Same Node")
+		return []
+	while queue:
+		path = queue.pop(0)
+		node = path[-1]
+		if node not in explored:
+			neighbours = graph[node]
+			for neighbour in neighbours:
+				new_path = list(path)
+				new_path.append(neighbour)
+				queue.append(new_path)
+				if neighbour == goal:
+					print("Shortest path = ", *new_path)
+					return new_path
+			explored.append(node)
+	print("So sorry, but a connecting"\
+				"path doesn't exist :(")
+	return []
+def build_graph(edges):
+    graph = defaultdict(list)
+    for edge in edges:
+        a, b = edge[0], edge[1]
+        graph[a].append(b)
+        graph[b].append(a)
+    return graph
 def predict_signal():
     print("done")
-    room_list = list(all_room_dict.values())
     output=[]
-    main_wifi_room=0
-    for ele in room_list:
-        print(ele)
-        room_pass_mat=room_pass_material(ele[4],main_wifi_room)
-        out=con(int(ele[0]),int(ele[1]),ele[2], ele[3],router_point,room_pass_mat)
-        output=output+out
+    all_room_attach_det={}
+    edges=[]
+    for key, value in all_room_dict.items():
+        if(key!=value[4]):
+            edges.append([key,value[4]])
+    all_room_attach_det=build_graph(edges)
+    for key, value in all_room_dict.items():
+        print(main_wifi_room)
+        path=BFS_SP(all_room_attach_det,key,main_wifi_room)
+        room_pass_mat=room_pass_material(path)
+        if(room_pass_mat!=[]):
+            out=con(int(value[0]),int(value[1]),value[2], value[3],router_point,room_pass_mat)
+            output=output+out
     output=np.array(output)
-    print(output)
     np.savetxt("./data/data.csv", output, delimiter = ",")
     map_heat()
 
@@ -196,6 +251,7 @@ def display_rooms():
                                 for event in pygame.event.get():
                                     if event.type == pygame.MOUSEBUTTONDOWN:
                                         global router_point
+                                        global main_wifi_room
                                         router_point=[mouse[0],mouse[1]]
                                         print(router_point)
                                         for ele in all_room_dict:
@@ -280,7 +336,7 @@ def add_room():
                     elif input_box6.text=="RCCROOF":
                         matcol=(255,20,147)
                     if input_box4.text=="C":
-                        f=[width/2-input_len/2 , height/2-input_wid/2 , input_len,input_wid , 0 , matcol]
+                        f=[width/2-input_len/2 , height/2-input_wid/2 , input_len,input_wid , 1 , matcol]
                     elif input_box4.text=="L":
                         print("left")
                         ret_x,ret_y,ret_w,ret_h=get_room(int(input_box3.text))
