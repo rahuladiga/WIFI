@@ -1,19 +1,35 @@
 import seaborn as sns
 import matplotlib.pyplot as plt
-import math
 from matplotlib import image as im
 import numpy as np
+import pandas as pd
+import pickle 
+def unique(list1):
+    x=np.unique(list1)
+    sortedVal=np.sort(x)
+    return list(map(str,sortedVal))
+#test
 def map_heat():
-    sns.set_theme(style="white")
-    signal_output_data = np.genfromtxt("./data/data.csv", delimiter=',')
+    #sns.set_theme(style="white")
+    df=pd.read_csv("./data/data.csv")
+    # Create feature and target arrays
+    signal_output_data = df.values
     image = im.imread("data/floor_plan.png")
-    for i in range(0,len(signal_output_data[:,9])):
-        signal_output_data[:,9][i]=round(signal_output_data[:,9][i]*-1)
-    clarity_ranking = [46,47, 48,49, 50,51, 52, 53,54,55, 56, 57,58, 59,60]
-    palette=sns.color_palette("light:b", as_cmap=True)
+    loaded_model = pickle.load(open('./model/model.pickle', 'rb'))
+    result = loaded_model.predict(signal_output_data[1:,2:8])
+    palette=sns.color_palette("rocket_r" , n_colors=len(unique(result)))
+    convres = list(map(str,result))
     #g=sns.kdeplot(x=signal_output_data[:,0], y=signal_output_data[:,1],hue=signal_output_data[:,9],alpha = 1,fill=True,zorder=2, levels=2, palette=palette) #alpha = 0.8,s=100,linewidth=0,hue_order=clarity_ranking,cbar = True
-    g=sns.scatterplot(x=signal_output_data[:,0], y=signal_output_data[:,1],hue=signal_output_data[:,9],alpha = 1,zorder=2, palette=palette)
+    g=sns.scatterplot(x=signal_output_data[1:,0], y=signal_output_data[1:,1],hue=convres,hue_order=unique(result),alpha = 1,zorder=2,s=100,linewidth=0,palette=palette)
     g.imshow(image, zorder=1)
     plt.show()
-#map_heat()
-#{1: [480.0, 300.0, 120, 120, 1, (165, 42, 42)]}
+map_heat()
+#train
+# def map_heat():
+#     df=pd.read_csv("./data/data.csv")
+#     signal_output_data = df.values
+#     image = im.imread("data/floor_plan.png")
+#     palette=sns.color_palette("coolwarm", as_cmap=True)
+#     g=sns.scatterplot(x=signal_output_data[1:,0], y=signal_output_data[1:,1],hue=signal_output_data[1:,9],hue_order=unique(signal_output_data[1:,9]),alpha = 1,zorder=2,s=100,linewidth=0,palette=palette)
+#     g.imshow(image, zorder=1)
+#     plt.show()

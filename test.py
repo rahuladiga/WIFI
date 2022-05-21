@@ -140,26 +140,7 @@ def move_room():
         pygame.display.flip()
         screen.fill((0, 0, 0))
         clock.tick(30)
-# def room_pass_material(room_attach,main_wifi_room):
-#     room_pass_mat=[0,0,0,0,0,0]
-#     while(room_attach!=main_wifi_room):
-#         room_mat=all_room_dict[room_attach][5]
-#         prev_room=all_room_dict[room_attach][4]
-#         if room_mat==(220,220,220):
-#             room_pass_mat[0]+=1
-#         elif room_mat==(0,0,255):
-#             room_pass_mat[1]+=1
-#         elif room_mat==(255,0,0):
-#             room_pass_mat[2]+=1
-#         elif room_mat==(165,42,42):
-#             room_pass_mat[3]+=1
-#         elif room_mat==(255,255,255):
-#             room_pass_mat[4]+=1
-#         elif room_mat==(255,20,147):
-#             room_pass_mat[5]+=1
-#         room_attach=prev_room
-#     return room_pass_mat
-
+        
 def room_pass_material(room_attach):
     room_pass_mat=[0,0,0,0,0,0]
     for each_room_attach in room_attach:
@@ -206,10 +187,12 @@ def build_graph(edges):
         a, b = edge[0], edge[1]
         graph[a].append(b)
         graph[b].append(a)
+    print(graph)
     return graph
 def predict_signal():
     print("done")
     output=[]
+    output.append(["X","Y","SHORTESTDIST","CONCRETE","HBLOCK","BRICK","WOOD","GLASS","RCCROOF","OUTPUT"])
     all_room_attach_det={}
     edges=[]
     for key, value in all_room_dict.items():
@@ -224,7 +207,7 @@ def predict_signal():
             out=con(int(value[0]),int(value[1]),value[2], value[3],router_point,room_pass_mat)
             output=output+out
     output=np.array(output)
-    np.savetxt("./data/data.csv", output, delimiter = ",")
+    np.savetxt("./data/data.csv", output, delimiter = ",",fmt='%s')
     map_heat()
 
 def display_rooms():
